@@ -1,0 +1,481 @@
+\documentclass[12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[portuguese]{babel}
+\usepackage{geometry}
+\geometry{a4paper, margin=2cm}
+\usepackage{courier}
+\usepackage{float}
+\usepackage{graphicx}
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage[most]{tcolorbox}
+\tcbuselibrary{skins}
+
+% Ambiente customizado para quadros de comandos
+\newtcolorbox{cmdbox}[1][]{
+  colback=blue!5!white,
+  colframe=blue!75!black,
+  fonttitle=\bfseries,
+  title=#1,
+  arc=4pt,
+  boxrule=0.5pt,
+  enhanced,
+  breakable,
+  fontupper=\small,
+  before upper={\setlength{\extrarowheight}{4pt}}
+}
+
+% Coluna de comando com fonte monoespaçada
+\newcolumntype{C}{>{\ttfamily}l}
+
+% Espaçamento extra nas linhas dos quadros
+\newcommand{\cmdboxspacing}{\setlength{\extrarowheight}{4pt}}
+
+\begin{document}
+
+\begin{center}
+\textbf{\Large Material de apoio ao módulo 2 - metrologia por imagem: automação com systemd}
+
+\vspace{0.5cm}
+
+\textit{Prof. Felipe Walter Dafico Pfrimer}
+
+\vspace{1cm}
+\end{center}
+
+\section{Objetivo do Módulo}
+
+No módulo anterior, vimos como acessar um sistema Linux por SSH, navegar pelo terminal, manipular arquivos e criar scripts Bash simples. Neste módulo, vamos usar esses conhecimentos para automatizar a execução de tarefas usando o \texttt{systemd}.
+
+O objetivo principal é compreender como transformar uma rotina manual de captura de imagens em um processo controlado pelo sistema operacional. Para isso, vamos estudar três elementos:
+
+\begin{cmdbox}[Elementos da Automação]
+\begin{tabularx}{\linewidth}{@{}C >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}X@{}}
+\toprule
+\textbf{Elemento} & \textbf{Função} & \textbf{Exemplo no Módulo} \\
+\midrule
+\texttt{script} & Define o que será feito & Capturar uma imagem com \texttt{fswebcam} \\
+\texttt{service} & Define como a tarefa será executada pelo sistema & Executar \texttt{captura.sh} \\
+\texttt{timer} & Define quando a tarefa será executada & Repetir a captura a cada intervalo \\
+\bottomrule
+\end{tabularx}
+\end{cmdbox}
+
+Ao final da aula, o aluno deverá ser capaz de criar um script de captura, associá-lo a um serviço do \texttt{systemd}, repetir sua execução com um temporizador e consultar o estado e os logs da automação.
+
+\section{Por que Automatizar a Captura de Imagens?}
+
+Em um experimento de metrologia por imagem, a forma como os dados são coletados influencia diretamente a confiabilidade dos resultados. Se uma pessoa precisa lembrar de executar um comando a cada intervalo de tempo, podem ocorrer atrasos, esquecimentos ou variações no procedimento.
+
+A automação reduz essa dependência da intervenção manual. Quando o sistema operacional executa a tarefa automaticamente, a rotina tende a ser mais regular, mais fácil de verificar e mais adequada para experimentos longos.
+
+\begin{cmdbox}[Benefícios da Automação]
+\begin{tabularx}{\linewidth}{@{}C >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}X@{}}
+\toprule
+\textbf{Aspecto} & \textbf{Problema Manual} & \textbf{Com Automação} \\
+\midrule
+Tempo & O operador pode atrasar ou esquecer & O sistema executa no intervalo definido \\
+Repetibilidade & Cada execução pode variar & A mesma rotina é repetida \\
+Registro & Erros podem passar despercebidos & O serviço pode gerar logs \\
+Escala & Coletas longas cansam o operador & O sistema pode operar por horas ou dias \\
+\bottomrule
+\end{tabularx}
+\end{cmdbox}
+
+Automatizar não significa apenas ``fazer o computador repetir uma tarefa''. Significa transformar uma rotina experimental em um procedimento mais controlado, verificável e reprodutível.
+
+\section{O que é systemd}
+
+O \texttt{systemd} é um sistema de inicialização e gerenciamento de serviços usado por muitas distribuições Linux. Ele é responsável por iniciar, controlar e monitorar processos importantes do sistema, como rede, login, SSH, sincronização de horário e rotinas definidas pelo administrador.
+
+Na prática, o \texttt{systemd} permite que uma tarefa seja gerenciada pelo próprio sistema operacional, em vez de depender de um terminal aberto pelo usuário.
+
+\subsection{Unidades do systemd}
+
+O \texttt{systemd} organiza suas configurações em arquivos chamados unidades. Cada unidade descreve uma tarefa, um recurso ou um grupo de ações.
+
+\begin{cmdbox}[Tipos Comuns de Unidade]
+\begin{tabularx}{\linewidth}{@{}C >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}X@{}}
+\toprule
+\textbf{Tipo} & \textbf{Função} & \textbf{Exemplo} \\
+\midrule
+\texttt{.service} & Define um serviço ou tarefa executável & \texttt{captura.service} \\
+\texttt{.timer} & Agenda a execução de um serviço & \texttt{captura.timer} \\
+\texttt{.target} & Agrupa estados ou etapas do sistema & \texttt{multi-user.target} \\
+\bottomrule
+\end{tabularx}
+\end{cmdbox}
+
+Neste módulo, vamos trabalhar principalmente com arquivos \texttt{.service} e \texttt{.timer}.
+
+\section{O comando systemctl}
+
+O comando \texttt{systemctl} é a principal forma de controlar unidades do \texttt{systemd}. Com ele, podemos iniciar serviços, parar serviços, verificar estados, habilitar execução automática e listar temporizadores.
+
+\begin{cmdbox}[Comandos Básicos com \texttt{systemctl}]
+\begin{tabularx}{\linewidth}{@{}C >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}X@{}}
+\toprule
+\textbf{Comando} & \textbf{Função} & \textbf{Exemplo de Uso} \\
+\midrule
+\texttt{start} & Iniciar uma unidade & \texttt{sudo systemctl start captura.service} \\
+\texttt{stop} & Parar uma unidade & \texttt{sudo systemctl stop captura.timer} \\
+\texttt{status} & Verificar o estado & \texttt{systemctl status captura.service} \\
+\texttt{enable} & Habilitar inicialização automática & \texttt{sudo systemctl enable captura.timer} \\
+\texttt{disable} & Desabilitar inicialização automática & \texttt{sudo systemctl disable captura.timer} \\
+\texttt{daemon-reload} & Recarregar arquivos modificados & \texttt{sudo systemctl daemon-reload} \\
+\texttt{list-timers} & Listar temporizadores ativos & \texttt{systemctl list-timers} \\
+\bottomrule
+\end{tabularx}
+\end{cmdbox}
+
+\textbf{Observação}: sempre que um arquivo \texttt{.service} ou \texttt{.timer} for criado ou modificado, é necessário executar \texttt{sudo systemctl daemon-reload}. Esse comando informa ao \texttt{systemd} que ele deve recarregar suas configurações.
+
+\section{Teste Manual Antes da Automação}
+
+Antes de criar um serviço ou um timer, é essencial testar a captura manualmente. Se a câmera, o comando ou o script não funcionam no terminal, também não funcionarão corretamente quando forem chamados pelo \texttt{systemd}.
+
+\begin{cmdbox}[Verificação Manual da Câmera]
+\begin{tabularx}{\linewidth}{@{}C >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}X@{}}
+\toprule
+\textbf{Comando} & \textbf{Função} & \textbf{Exemplo de Uso} \\
+\midrule
+\texttt{ls /dev/video*} & Verificar dispositivos de vídeo & \texttt{ls /dev/video*} \\
+\texttt{type fswebcam} & Verificar se \texttt{fswebcam} existe & \texttt{type fswebcam} \\
+\texttt{mkdir -p} & Criar pasta para imagens & \texttt{mkdir -p imagens} \\
+\texttt{fswebcam} & Capturar imagem da webcam & \texttt{fswebcam -r 1280x720 imagens/teste.jpg} \\
+\texttt{ls -lh} & Conferir o arquivo gerado & \texttt{ls -lh imagens} \\
+\bottomrule
+\end{tabularx}
+\end{cmdbox}
+
+Uma regra prática importante é:
+
+\begin{center}
+\textbf{Se não funciona manualmente, ainda não está pronto para virar automação.}
+\end{center}
+
+\section{Script de Captura Simples}
+
+O primeiro modelo de automação usa um script que faz apenas uma captura e termina. Esse formato é adequado para ser chamado por um timer, pois cada disparo executa uma nova coleta.
+
+\subsection{Exemplo de Script}
+
+O arquivo pode ser chamado de \texttt{captura.sh}. O exemplo abaixo salva a imagem em uma pasta chamada \texttt{imagens}, usando data e hora no nome do arquivo.
+
+\begin{cmdbox}[Script \texttt{captura.sh}]
+\begin{tabularx}{\linewidth}{@{}C >{\raggedright\arraybackslash}X@{}}
+\toprule
+\textbf{Linha} & \textbf{Código} \\
+\midrule
+1 & \texttt{\#!/bin/bash} \\
+2 & \texttt{} \\
+3 & \texttt{mkdir -p /home/g0/imagens} \\
+4 & \texttt{} \\
+5 & \texttt{ts=\$(date +\%Y\%m\%d\_\%H\%M\%S)} \\
+6 & \texttt{arquivo="/home/g0/imagens/foto\_\$\{ts\}.jpg"} \\
+7 & \texttt{} \\
+8 & \texttt{echo "Capturando imagem em \$arquivo"} \\
+9 & \texttt{/usr/bin/fswebcam -r 1280x720 "\$arquivo"} \\
+10 & \texttt{echo "Captura finalizada"} \\
+\bottomrule
+\end{tabularx}
+\end{cmdbox}
+
+O usuário \texttt{g0} deve ser substituído pelo usuário correto de cada grupo, como \texttt{g1}, \texttt{g2}, \texttt{g3} ou \texttt{g4}. Em arquivos usados pelo \texttt{systemd}, é recomendável usar caminhos absolutos, como \texttt{/home/g0/captura.sh}, em vez de caminhos relativos, como \texttt{./captura.sh}.
+
+\subsection{Executando o Script Manualmente}
+
+\begin{cmdbox}[Teste Manual do Script]
+\begin{tabularx}{\linewidth}{@{}C >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}X@{}}
+\toprule
+\textbf{Comando} & \textbf{Função} & \textbf{Exemplo de Uso} \\
+\midrule
+\texttt{chmod +x} & Tornar o script executável & \texttt{chmod +x captura.sh} \\
+\texttt{./captura.sh} & Executar a captura manualmente & \texttt{./captura.sh} \\
+\texttt{ls -lh} & Verificar imagens salvas & \texttt{ls -lh imagens} \\
+\bottomrule
+\end{tabularx}
+\end{cmdbox}
+
+Esse teste confirma se o script consegue criar a pasta, gerar o nome do arquivo e chamar a câmera corretamente.
+
+\section{Serviço para Captura Simples}
+
+Um serviço do \texttt{systemd} descreve como uma tarefa deve ser executada. Neste exemplo, usaremos um serviço do tipo \texttt{oneshot}, pois a tarefa executa uma vez e termina.
+
+\subsection{Estrutura Geral de um Serviço}
+
+\begin{cmdbox}[Seções de um Arquivo \texttt{.service}]
+\begin{tabularx}{\linewidth}{@{}C >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}X@{}}
+\toprule
+\textbf{Seção} & \textbf{Função} & \textbf{Exemplo} \\
+\midrule
+\texttt{[Unit]} & Descreve a unidade e dependências & \texttt{Description=Captura de imagem} \\
+\texttt{[Service]} & Define como executar a tarefa & \texttt{ExecStart=...} \\
+\texttt{[Install]} & Define como habilitar a unidade & \texttt{WantedBy=multi-user.target} \\
+\bottomrule
+\end{tabularx}
+\end{cmdbox}
+
+\subsection{Exemplo de \texttt{captura.service}}
+
+\begin{cmdbox}[Arquivo \texttt{/etc/systemd/system/captura.service}]
+\begin{tabularx}{\linewidth}{@{}C >{\raggedright\arraybackslash}X@{}}
+\toprule
+\textbf{Linha} & \textbf{Código} \\
+\midrule
+1 & \texttt{[Unit]} \\
+2 & \texttt{Description=Captura de imagem com script do usuario g0} \\
+3 & \texttt{After=network.target} \\
+4 & \texttt{} \\
+5 & \texttt{[Service]} \\
+6 & \texttt{Type=oneshot} \\
+7 & \texttt{User=g0} \\
+8 & \texttt{WorkingDirectory=/home/g0} \\
+9 & \texttt{ExecStart=/home/g0/captura.sh} \\
+10 & \texttt{} \\
+11 & \texttt{[Install]} \\
+12 & \texttt{WantedBy=multi-user.target} \\
+\bottomrule
+\end{tabularx}
+\end{cmdbox}
+
+\begin{cmdbox}[Campos Importantes do Serviço]
+\begin{tabularx}{\linewidth}{@{}C >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}X@{}}
+\toprule
+\textbf{Campo} & \textbf{Função} & \textbf{Neste Exemplo} \\
+\midrule
+\texttt{Type=oneshot} & Executa uma tarefa e termina & Uma captura por execução \\
+\texttt{User=g0} & Define o usuário da execução & Usa o diretório do grupo \texttt{g0} \\
+\texttt{WorkingDirectory} & Define o diretório de trabalho & \texttt{/home/g0} \\
+\texttt{ExecStart} & Define o comando executado & \texttt{/home/g0/captura.sh} \\
+\bottomrule
+\end{tabularx}
+\end{cmdbox}
+
+\subsection{Testando o Serviço}
+
+\begin{cmdbox}[Controle do Serviço]
+\begin{tabularx}{\linewidth}{@{}C >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}X@{}}
+\toprule
+\textbf{Comando} & \textbf{Função} & \textbf{Exemplo de Uso} \\
+\midrule
+\texttt{daemon-reload} & Recarregar unidades modificadas & \texttt{sudo systemctl daemon-reload} \\
+\texttt{start} & Executar o serviço & \texttt{sudo systemctl start captura.service} \\
+\texttt{status} & Verificar o estado & \texttt{systemctl status captura.service} \\
+\texttt{journalctl} & Ver mensagens registradas & \texttt{journalctl -u captura.service -n 20} \\
+\bottomrule
+\end{tabularx}
+\end{cmdbox}
+
+Depois de iniciar o serviço, a pasta de imagens deve conter uma nova captura. Se isso não acontecer, o primeiro passo é verificar o estado com \texttt{systemctl status} e depois consultar os logs com \texttt{journalctl}.
+
+\section{Timer para Repetir a Captura}
+
+Um timer agenda a execução de um serviço. Ele não executa a captura diretamente; ele apenas dispara o serviço no intervalo definido.
+
+\begin{center}
+\textbf{O serviço define o que fazer. O timer define quando fazer.}
+\end{center}
+
+\subsection{Estrutura Geral de um Timer}
+
+\begin{cmdbox}[Seções de um Arquivo \texttt{.timer}]
+\begin{tabularx}{\linewidth}{@{}C >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}X@{}}
+\toprule
+\textbf{Seção} & \textbf{Função} & \textbf{Exemplo} \\
+\midrule
+\texttt{[Unit]} & Descreve o temporizador & \texttt{Description=Timer de captura} \\
+\texttt{[Timer]} & Define o agendamento & \texttt{OnUnitActiveSec=1min} \\
+\texttt{[Install]} & Define como habilitar o timer & \texttt{WantedBy=timers.target} \\
+\bottomrule
+\end{tabularx}
+\end{cmdbox}
+
+\subsection{Exemplo de \texttt{captura.timer}}
+
+\begin{cmdbox}[Arquivo \texttt{/etc/systemd/system/captura.timer}]
+\begin{tabularx}{\linewidth}{@{}C >{\raggedright\arraybackslash}X@{}}
+\toprule
+\textbf{Linha} & \textbf{Código} \\
+\midrule
+1 & \texttt{[Unit]} \\
+2 & \texttt{Description=Timer para executar captura de imagem periodicamente} \\
+3 & \texttt{} \\
+4 & \texttt{[Timer]} \\
+5 & \texttt{OnBootSec=30s} \\
+6 & \texttt{OnUnitActiveSec=1min} \\
+7 & \texttt{Unit=captura.service} \\
+8 & \texttt{} \\
+9 & \texttt{[Install]} \\
+10 & \texttt{WantedBy=timers.target} \\
+\bottomrule
+\end{tabularx}
+\end{cmdbox}
+
+Neste exemplo, o timer aguarda 30 segundos após a inicialização e, depois, executa o serviço novamente a cada 1 minuto. O intervalo de 1 minuto é útil em aula porque permite observar as imagens sendo geradas. Em uma aplicação real, o intervalo pode ser maior.
+
+\subsection{Controlando o Timer}
+
+\begin{cmdbox}[Comandos para o Timer]
+\begin{tabularx}{\linewidth}{@{}C >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}X@{}}
+\toprule
+\textbf{Comando} & \textbf{Função} & \textbf{Exemplo de Uso} \\
+\midrule
+\texttt{enable --now} & Habilitar e iniciar imediatamente & \texttt{sudo systemctl enable --now captura.timer} \\
+\texttt{status} & Verificar estado do timer & \texttt{systemctl status captura.timer} \\
+\texttt{list-timers} & Listar temporizadores ativos & \texttt{systemctl list-timers} \\
+\texttt{stop} & Parar temporariamente & \texttt{sudo systemctl stop captura.timer} \\
+\texttt{disable} & Desabilitar inicialização automática & \texttt{sudo systemctl disable captura.timer} \\
+\bottomrule
+\end{tabularx}
+\end{cmdbox}
+
+Quando o timer está ativo, o serviço será chamado automaticamente. Para verificar se as capturas ocorreram, consulte a pasta de imagens e os logs do serviço:
+
+\begin{cmdbox}[Verificação da Captura Agendada]
+\begin{tabularx}{\linewidth}{@{}C >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}X@{}}
+\toprule
+\textbf{Comando} & \textbf{Função} & \textbf{Exemplo de Uso} \\
+\midrule
+\texttt{ls -lh} & Verificar arquivos gerados & \texttt{ls -lh imagens} \\
+\texttt{journalctl} & Ver logs da execução & \texttt{journalctl -u captura.service -n 30} \\
+\bottomrule
+\end{tabularx}
+\end{cmdbox}
+
+\section{Logs e Diagnóstico}
+
+Em tarefas automáticas, os erros nem sempre aparecem na tela. Por isso, os logs são uma parte essencial do trabalho com \texttt{systemd}.
+
+\begin{cmdbox}[Diagnóstico de Problemas]
+\begin{tabularx}{\linewidth}{@{}C >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}X@{}}
+\toprule
+\textbf{Pergunta} & \textbf{Comando Útil} & \textbf{O que Observar} \\
+\midrule
+O serviço executou? & \texttt{systemctl status captura.service} & Estado, código de saída e mensagens \\
+O timer está ativo? & \texttt{systemctl list-timers} & Próxima execução e última execução \\
+Houve erro no script? & \texttt{journalctl -u captura.service -n 30} & Mensagens do script e falhas \\
+As imagens foram geradas? & \texttt{ls -lh imagens} & Arquivos com data e hora \\
+\bottomrule
+\end{tabularx}
+\end{cmdbox}
+
+Problemas comuns incluem caminho incorreto, falta de permissão de execução, usuário errado no serviço, câmera indisponível ou ausência do comando \texttt{fswebcam}.
+
+\section{Coleta Contínua com Apenas um Serviço}
+
+O modelo com \texttt{service + timer} é adequado quando uma tarefa pode ser executada uma vez e terminar. Porém, para coletas muito frequentes, pode ser interessante usar um script contínuo, que fica rodando em loop.
+
+Nesse segundo modelo, não usamos timer. O próprio script controla o intervalo entre capturas usando \texttt{sleep}.
+
+\subsection{Comparação entre os Modelos}
+
+\begin{cmdbox}[Timer versus Serviço Contínuo]
+\begin{tabularx}{\linewidth}{@{}C >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}X@{}}
+\toprule
+\textbf{Modelo} & \textbf{Como Funciona} & \textbf{Quando Usar} \\
+\midrule
+\texttt{service + timer} & O timer chama o serviço repetidamente & Intervalos moderados, como minutos \\
+\texttt{service contínuo} & O serviço inicia um script que permanece em execução & Intervalos curtos, como segundos \\
+\bottomrule
+\end{tabularx}
+\end{cmdbox}
+
+\subsection{Script de Captura Contínua}
+
+O script abaixo captura imagens continuamente e aguarda 15 segundos entre uma captura e outra.
+
+\begin{cmdbox}[Script \texttt{captura\_continua.sh}]
+\begin{tabularx}{\linewidth}{@{}C >{\raggedright\arraybackslash}X@{}}
+\toprule
+\textbf{Linha} & \textbf{Código} \\
+\midrule
+1 & \texttt{\#!/bin/bash} \\
+2 & \texttt{} \\
+3 & \texttt{mkdir -p /home/g0/imagens\_continuas} \\
+4 & \texttt{} \\
+5 & \texttt{while true; do} \\
+6 & \texttt{\ \ \ ts=\$(date +\%Y\%m\%d\_\%H\%M\%S)} \\
+7 & \texttt{\ \ \ arquivo="/home/g0/imagens\_continuas/foto\_\$\{ts\}.jpg"} \\
+8 & \texttt{} \\
+9 & \texttt{\ \ \ echo "Capturando imagem em \$arquivo"} \\
+10 & \texttt{\ \ \ /usr/bin/fswebcam -r 1280x720 "\$arquivo"} \\
+11 & \texttt{} \\
+12 & \texttt{\ \ \ sleep 15} \\
+13 & \texttt{done} \\
+\bottomrule
+\end{tabularx}
+\end{cmdbox}
+
+Como esse script não termina sozinho, o teste manual precisa ser interrompido com \texttt{Ctrl+C}.
+
+\subsection{Serviço Contínuo}
+
+Para um script contínuo, usamos um serviço do tipo \texttt{simple}. O processo iniciado pelo serviço permanece ativo enquanto o script estiver rodando.
+
+\begin{cmdbox}[Arquivo \texttt{/etc/systemd/system/captura-continua.service}]
+\begin{tabularx}{\linewidth}{@{}C >{\raggedright\arraybackslash}X@{}}
+\toprule
+\textbf{Linha} & \textbf{Código} \\
+\midrule
+1 & \texttt{[Unit]} \\
+2 & \texttt{Description=Captura continua de imagens com fswebcam} \\
+3 & \texttt{After=network.target} \\
+4 & \texttt{} \\
+5 & \texttt{[Service]} \\
+6 & \texttt{Type=simple} \\
+7 & \texttt{User=g0} \\
+8 & \texttt{WorkingDirectory=/home/g0} \\
+9 & \texttt{ExecStart=/home/g0/captura\_continua.sh} \\
+10 & \texttt{Restart=always} \\
+11 & \texttt{} \\
+12 & \texttt{[Install]} \\
+13 & \texttt{WantedBy=multi-user.target} \\
+\bottomrule
+\end{tabularx}
+\end{cmdbox}
+
+\begin{cmdbox}[Controle do Serviço Contínuo]
+\begin{tabularx}{\linewidth}{@{}C >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}X@{}}
+\toprule
+\textbf{Comando} & \textbf{Função} & \textbf{Exemplo de Uso} \\
+\midrule
+\texttt{start} & Iniciar a coleta contínua & \texttt{sudo systemctl start captura-continua.service} \\
+\texttt{status} & Verificar se está rodando & \texttt{systemctl status captura-continua.service} \\
+\texttt{journalctl} & Ver mensagens da coleta & \texttt{journalctl -u captura-continua.service -n 30} \\
+\texttt{stop} & Parar a coleta contínua & \texttt{sudo systemctl stop captura-continua.service} \\
+\bottomrule
+\end{tabularx}
+\end{cmdbox}
+
+\section{Cuidados Importantes}
+
+Ao trabalhar com \texttt{systemd}, pequenos detalhes podem impedir a automação de funcionar. A tabela abaixo resume cuidados úteis durante a prática.
+
+\begin{cmdbox}[Checklist de Automação]
+\begin{tabularx}{\linewidth}{@{}C >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}X@{}}
+\toprule
+\textbf{Cuidado} & \textbf{Motivo} & \textbf{Como Conferir} \\
+\midrule
+Testar manualmente & Isola problemas do script & \texttt{./captura.sh} \\
+Usar caminho absoluto & O serviço não depende do terminal & \texttt{/home/g0/captura.sh} \\
+Dar permissão de execução & O script precisa poder rodar & \texttt{chmod +x captura.sh} \\
+Recarregar o systemd & Arquivos novos precisam ser lidos & \texttt{sudo systemctl daemon-reload} \\
+Verificar logs & Erros podem não aparecer na tela & \texttt{journalctl -u captura.service} \\
+Parar serviços contínuos & Evita capturas indefinidas & \texttt{systemctl stop ...} \\
+\bottomrule
+\end{tabularx}
+\end{cmdbox}
+
+Antes de pedir ajuda, é recomendável verificar três pontos: se o script roda manualmente, se o serviço apresenta erro no \texttt{status} e se o \texttt{journalctl} mostra alguma mensagem relacionada a caminho, permissão ou câmera.
+
+\section{Conclusão}
+
+Neste módulo, vimos como o \texttt{systemd} pode ser usado para automatizar rotinas de captura de imagens em um sistema Linux. A partir de um script Bash, criamos um serviço para executar uma tarefa e um timer para repetir essa tarefa em intervalos definidos.
+
+Também vimos uma alternativa para coletas rápidas: um serviço contínuo que inicia um script com loop e \texttt{sleep}. A diferença entre os modelos é fundamental: no primeiro, o timer controla o intervalo; no segundo, o intervalo está dentro do próprio script.
+
+Em metrologia por imagem, essa automação ajuda a reduzir erros manuais, organizar dados e melhorar a repetibilidade da coleta. Com serviços, timers e logs, o experimento deixa de depender apenas da ação direta do operador e passa a ser controlado por uma rotina configurada no sistema.
+
+\end{document}

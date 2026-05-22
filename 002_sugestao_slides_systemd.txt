@@ -1,0 +1,381 @@
+Sugestao de textos para slides - Modulo 2
+Tema: systemd, servicos e timers
+Objetivo da apresentacao: explicar, de forma geral, como o Linux pode executar tarefas automaticamente usando systemd, preparando os alunos para criar um servico e um timer usados na captura de imagens.
+
+============================================================
+Slide 1 - Titulo
+============================================================
+
+systemd: automatizando tarefas no Linux
+
+Da execucao manual de comandos para rotinas controladas pelo sistema.
+
+============================================================
+Slide 2 - Por que automatizar?
+============================================================
+
+Em um experimento, repetir uma tarefa manualmente pode introduzir variacoes.
+
+Automatizar ajuda a:
+- executar tarefas no momento correto;
+- reduzir esquecimento e erro humano;
+- manter uma rotina padronizada;
+- registrar dados de forma mais consistente.
+
+Pergunta para guiar a aula:
+qual tarefa do nosso experimento nao deveria depender da memoria de uma pessoa?
+
+============================================================
+Slide 3 - Exemplo no contexto da disciplina
+============================================================
+
+Imagine uma rotina de captura de imagens.
+
+O pesquisador poderia executar um comando manualmente a cada intervalo de tempo.
+
+Mas, em uma coleta longa, isso se torna pouco pratico e pouco confiavel.
+
+O ideal e que o proprio sistema execute a tarefa automaticamente.
+
+Ao final da pratica, queremos sair de "eu preciso lembrar de capturar" para "o sistema captura sozinho".
+
+============================================================
+Slide 4 - O papel do sistema operacional
+============================================================
+
+O Linux nao serve apenas para executar comandos digitados no terminal.
+
+Ele tambem pode iniciar programas, monitorar processos, registrar eventos e agendar tarefas.
+
+Para isso, muitas distribuicoes Linux usam o systemd.
+
+============================================================
+Slide 5 - O que e systemd?
+============================================================
+
+systemd e um sistema de inicializacao e gerenciamento de servicos.
+
+Ele e responsavel por iniciar e controlar componentes do sistema, como rede, login, processos em segundo plano e rotinas automaticas.
+
+Na pratica, o systemd permite que uma tarefa seja controlada pelo proprio Linux.
+
+============================================================
+Slide 6 - Onde o systemd aparece?
+============================================================
+
+Quando o Linux liga, varios servicos precisam ser iniciados.
+
+Exemplos:
+- conexao de rede;
+- servico SSH;
+- gerenciamento de usuarios;
+- sincronizacao de horario;
+- rotinas definidas pelo administrador.
+
+O systemd organiza e controla esses servicos.
+
+============================================================
+Slide 7 - Comando central: systemctl
+============================================================
+
+O comando systemctl e usado para conversar com o systemd.
+
+Com ele, podemos:
+- verificar o estado de um servico;
+- iniciar uma tarefa;
+- parar uma tarefa;
+- habilitar uma tarefa para iniciar automaticamente;
+- consultar mensagens de erro.
+
+============================================================
+Slide 8 - Servico
+============================================================
+
+Um servico e uma tarefa controlada pelo systemd.
+
+Ele pode representar um programa que fica sempre em execucao ou uma tarefa que roda uma vez e termina.
+
+No nosso caso, um servico pode executar um script de captura de imagem.
+
+============================================================
+Slide 9 - Unidade do systemd
+============================================================
+
+O systemd organiza suas configuracoes em arquivos chamados unidades.
+
+Uma unidade descreve o que o sistema deve fazer.
+
+Tipos comuns:
+- .service: define um servico;
+- .timer: define quando um servico deve ser executado;
+- .target: agrupa etapas do sistema.
+
+============================================================
+Slide 10 - Ideia de um arquivo .service
+============================================================
+
+Um arquivo .service responde a perguntas como:
+
+O que este servico faz?
+Quando ele pode ser executado?
+Qual comando deve ser chamado?
+Com qual usuario ou diretorio de trabalho?
+
+Ele transforma um comando manual em uma tarefa gerenciada pelo sistema.
+
+============================================================
+Slide 11 - Estrutura geral de um .service
+============================================================
+
+[Unit]
+Descricao do servico e dependencias principais.
+
+[Service]
+Como a tarefa sera executada.
+
+[Install]
+Como o servico sera habilitado dentro do sistema.
+
+Essa estrutura separa contexto, execucao e ativacao.
+
+============================================================
+Slide 12 - Exemplo conceitual de servico
+============================================================
+
+Um servico de captura poderia executar:
+
+/home/usuario/captura.sh
+
+O script fica responsavel pela acao pratica.
+O systemd fica responsavel por chamar esse script de forma controlada.
+
+Essa separacao facilita manutencao e testes.
+
+============================================================
+Slide 13 - Execucao manual antes da automacao
+============================================================
+
+Antes de automatizar, sempre testamos manualmente.
+
+Primeiro:
+- testar o comando de captura;
+- testar o script;
+- verificar se a imagem foi salva;
+- corrigir erros no terminal.
+
+Depois:
+- criar o servico;
+- testar o servico com systemctl.
+
+Regra da aula:
+se nao funciona manualmente, ainda nao esta pronto para virar automacao.
+
+============================================================
+Slide 14 - Por que nao colocar tudo direto no service?
+============================================================
+
+E possivel chamar comandos diretamente no arquivo .service.
+
+Mas, para tarefas com varias etapas, costuma ser melhor usar um script.
+
+Vantagens:
+- o script pode ser testado separadamente;
+- o service fica mais simples;
+- fica mais facil alterar a rotina;
+- a organizacao do experimento melhora.
+
+============================================================
+Slide 15 - Timer
+============================================================
+
+Um timer e uma unidade do systemd usada para agendar a execucao de um servico.
+
+Ele define quando uma tarefa deve rodar.
+
+Em vez de deixar um loop infinito no script, o systemd pode executar a tarefa periodicamente.
+
+============================================================
+Slide 16 - Ideia de um arquivo .timer
+============================================================
+
+Um arquivo .timer responde a perguntas como:
+
+Quando a tarefa deve iniciar?
+Ela deve repetir?
+Qual servico sera acionado?
+O timer deve iniciar junto com o sistema?
+
+O timer nao faz a captura diretamente.
+Ele dispara o servico que executa a captura.
+
+============================================================
+Slide 17 - Servico + timer
+============================================================
+
+O servico define o que fazer.
+
+O timer define quando fazer.
+
+Exemplo:
+- captura.service: executa o script de captura;
+- captura.timer: executa captura.service a cada intervalo de tempo.
+
+Essa divisao torna a automacao mais clara.
+
+============================================================
+Slide 18 - Comparacao com execucao manual
+============================================================
+
+Execucao manual:
+O usuario entra no terminal e executa o script.
+
+Execucao com systemd:
+O sistema executa o script seguindo uma configuracao.
+
+Execucao com timer:
+O sistema executa o script automaticamente em intervalos definidos.
+
+============================================================
+Slide 19 - Fluxo de trabalho recomendado
+============================================================
+
+1. Criar e testar o script manualmente.
+2. Criar o arquivo .service.
+3. Testar o servico com systemctl.
+4. Criar o arquivo .timer.
+5. Habilitar e iniciar o timer.
+6. Verificar se as imagens estao sendo geradas.
+7. Consultar logs se algo falhar.
+
+Meta da pratica:
+ao final, cada grupo deve conseguir explicar qual arquivo define a acao e qual arquivo define o horario.
+
+============================================================
+Slide 20 - Comandos de verificacao
+============================================================
+
+Alguns comandos importantes:
+
+systemctl status nome.service
+systemctl start nome.service
+systemctl stop nome.service
+systemctl enable nome.timer
+systemctl start nome.timer
+systemctl list-timers
+journalctl -u nome.service
+
+Esses comandos ajudam a controlar e diagnosticar a automacao.
+
+============================================================
+Slide 21 - Logs
+============================================================
+
+Quando uma tarefa automatica falha, nem sempre vemos o erro na tela.
+
+Por isso, os logs sao essenciais.
+
+Com journalctl, podemos verificar o que aconteceu durante a execucao de um servico.
+
+Os logs ajudam a responder:
+- o servico executou?
+- houve erro no script?
+- faltou permissao?
+- o caminho do arquivo estava correto?
+
+============================================================
+Slide 22 - Cuidados importantes
+============================================================
+
+Ao automatizar tarefas, alguns detalhes fazem diferenca:
+
+- usar caminhos absolutos;
+- testar o script antes do servico;
+- conferir permissoes;
+- evitar depender do diretorio atual do terminal;
+- verificar usuario de execucao;
+- acompanhar os logs.
+
+Automacao boa comeca com comandos simples e bem testados.
+
+Antes de chamar o professor, verifique:
+o script roda manualmente?
+o servico mostra erro no status?
+o log indica caminho ou permissao incorreta?
+
+============================================================
+Slide 23 - Ligacao com a captura de imagens
+============================================================
+
+Na pratica da aula, a ideia sera:
+
+1. criar um script de captura;
+2. configurar um servico para executar esse script;
+3. configurar um timer para repetir a captura;
+4. verificar os arquivos gerados;
+5. discutir como isso melhora a repetibilidade do experimento.
+
+Entrega esperada:
+uma pasta recebendo imagens automaticamente em intervalos definidos.
+
+============================================================
+Slide 24 - Por que isso importa em metrologia por imagem?
+============================================================
+
+Medicoes por imagem dependem de consistencia.
+
+Automatizar a captura ajuda a manter:
+- intervalo regular entre imagens;
+- menor interferencia do operador;
+- organizacao dos dados;
+- rastreabilidade da rotina;
+- maior confiabilidade no experimento.
+
+============================================================
+Slide 25 - Encerramento
+============================================================
+
+systemd permite transformar um comando ou script em uma tarefa controlada pelo sistema.
+
+Com servicos e timers, o Linux pode executar rotinas de forma automatica e repetivel.
+
+Essa base sera usada para construir uma rotina de captura de imagens mais organizada, confiavel e adequada para experimentos.
+
+Proximo passo:
+criar o script, transformar em servico e deixar o timer chamar a captura por conta propria.
+
+============================================================
+Slide opcional - Analogia
+============================================================
+
+Pense no script como a receita.
+
+O servico e a instrucao de como executar essa receita.
+
+O timer e o despertador que decide quando a receita deve ser executada.
+
+Juntos, eles permitem que o sistema trabalhe sem depender de alguem digitando o comando no momento certo.
+
+============================================================
+Slide opcional - Pergunta para a turma
+============================================================
+
+Se uma imagem deve ser capturada a cada 5 minutos durante varias horas:
+
+Quais problemas podem acontecer se essa tarefa depender de uma pessoa?
+
+E quais problemas ainda podem acontecer mesmo usando automacao?
+
+============================================================
+Slide opcional - Ponte para a pratica
+============================================================
+
+Na pratica, vamos sair desta ideia geral:
+
+"Quero capturar imagens periodicamente"
+
+Para uma configuracao concreta:
+
+script de captura
++ servico do systemd
++ timer do systemd
+= aquisicao automatica de imagens
