@@ -66,6 +66,8 @@ Crie uma pasta para imagens:
 mkdir -p imagens
 ```
 
+A opção `-p` evita erro se a pasta já existir.
+
 Capture uma imagem de teste:
 
 ```bash
@@ -78,13 +80,19 @@ Confira se o arquivo foi criado:
 ls -lh imagens
 ```
 
+A opção `--no-banner` remove a data e hora da imagem, mas pode ser útil para diagnóstico.
+
+```bash
+fswebcam --no-banner -r 1280x720 imagens/teste_sem_banner.jpg
+```
+
 ### Checkpoint
 
 - [ ] Estou no diretório home.
 - [ ] A câmera apareceu como `/dev/video0` ou similar.
 - [ ] O comando `fswebcam` está disponível.
 - [ ] A imagem `teste.jpg` foi criada.
-
+- [ ] A imagem `teste_sem_banner.jpg` foi criada.
 ### Responda
 
 1. Por que testamos a câmera antes de criar o serviço?
@@ -99,36 +107,45 @@ Vamos criar um script que faz uma única captura e termina. Esse script será us
 
 ### Criar o script
 
+Use o seguinte comando para criar o arquivo `captura.sh`:
+
 ```bash
 nano captura.sh
 ```
+
+Ou crie o arquivo diretamente pelo VS Code (caso esteja usando), conforme a orientação do professor.
 
 Digite o conteúdo abaixo. Troque `g0` pelo usuário do seu grupo, se necessário.
 
 ```bash
 #!/bin/bash
 
-mkdir -p /home/g0/imagens
+mkdir -p $HOME/imagens
 
 ts=$(date +%Y%m%d_%H%M%S)
-arquivo="/home/g0/imagens/foto_${ts}.jpg"
+arquivo="$HOME/imagens/foto_${ts}.jpg"
 
 echo "Capturando imagem em $arquivo"
-/usr/bin/fswebcam -r 1280x720 "$arquivo"
+fswebcam -r 1280x720 "$arquivo"
 echo "Captura finalizada"
 ```
 
-Salve com `Ctrl+O`, confirme com `Enter` e saia com `Ctrl+X`.
+No nano, salve com `Ctrl+O`, confirme com `Enter` e saia com `Ctrl+X`.
 
 ### Testar manualmente
+
+Adicione permissão de execução:
 
 ```bash
 chmod +x captura.sh
 ```
+Verifique se o script tem permissão de execução:
 
 ```bash
 ls -l captura.sh
 ```
+
+Execute o script:
 
 ```bash
 ./captura.sh
@@ -146,6 +163,51 @@ Execute novamente:
 
 ```bash
 ls -lh imagens
+```
+
+Perceba que o script cria uma nova imagem a cada execução, com um nome diferente baseado na data e hora.
+
+O script assume que `fswebcam` está instalado, no PATH do usuário e que a câmera está funcionando. Se algum desses itens falhar, o script pode não criar a imagem.
+
+É possível melhorar i script para verificar esses erros:
+```bash
+#!/usr/bin/env bash
+
+# Script para capturar uma imagem usando fswebcam
+# Requisitos: fswebcam instalado e câmera conectada em /dev/video0
+
+# Faz o Bash tratar variáveis não definidas como erro
+set -u
+
+# Verifica se o fswebcam está instalado e guarda o caminho para a variável
+if ! caminho_fswebcam=$(command -v fswebcam); then
+    echo "Erro: fswebcam não encontrado. Instale com:"
+    echo "sudo apt install fswebcam"
+    exit 1
+fi
+
+# Verifica se a câmera está disponível em /dev/video0
+if [ ! -c /dev/video0 ]; then
+    echo "Erro: câmera não encontrada em /dev/video0."
+    exit 1
+fi
+
+# Cria o diretório para salvar as imagens, se não existir
+mkdir -p "$HOME/imagens"
+
+# Gera um nome de arquivo com timestamp para evitar sobrescritas
+ts=$(date +%Y%m%d_%H%M%S)
+arquivo="$HOME/imagens/foto_${ts}.jpg"
+
+echo "Capturando imagem em $arquivo"
+
+# Executa o comando fswebcam para capturar a imagem
+if "$caminho_fswebcam" -d /dev/video0 -q -r 1280x720 --no-banner "$arquivo"; then
+    echo "Captura finalizada"
+else
+    echo "Erro: falha ao capturar imagem."
+    exit 1
+fi
 ```
 
 ### Checkpoint
@@ -226,6 +288,12 @@ Veja os logs:
 journalctl -u captura.service -n 20
 ```
 
+Pare o serviço:
+
+```bash
+sudo systemctl stop captura.service
+```
+
 ### Checkpoint
 
 - [ ] Criei `captura.service`.
@@ -259,7 +327,7 @@ Digite:
 Description=Timer para executar captura de imagem periodicamente
 
 [Timer]
-OnBootSec=30s
+OnBootSec=60s
 OnUnitActiveSec=1min
 Unit=captura.service
 
@@ -302,6 +370,23 @@ Consulte os logs do serviço:
 ```bash
 journalctl -u captura.service -n 30
 ```
+
+### Gerando uma planilha das capturas
+
+Para gerar uma planilha com os horários das capturas, adicione o seguinte trecho de código ao final do script `captura.sh`:
+
+```bash
+# Salva em um csv o caminho da imagem e a data/hora da captura
+csv="$HOME/imagens/capturas.csv"
+
+# Verifica se o arquivo CSV existe, se não existir, cria e adiciona o cabeçalho
+# Os cochetes são usados para evitar problemas com espaços em branco no nome do arquivo
+if [ ! -f "$csv" ]; then
+    echo "caminho,data_hora" > "$csv"
+fi
+echo "$arquivo,$(date +%Y-%m-%d_%H:%M:%S)" >> "$csv"
+```
+A opção `-f`, do comando `[`, verifica se o arquivo existe. Se não existir, o script cria o arquivo e adiciona um cabeçalho com os nomes das colunas. Em seguida, a linha `echo "$arquivo,$(date +%Y-%m-%d_%H:%M:%S)" >> "$csv"` adiciona uma nova linha ao arquivo CSV com o caminho da imagem e a data/hora da captura.
 
 ### Checkpoint
 
@@ -402,19 +487,49 @@ nano captura_continua.sh
 Digite o conteúdo abaixo. Troque `g0` pelo usuário do seu grupo, se necessário.
 
 ```bash
-#!/bin/bash
+#!/usr/bin/env bash
 
-mkdir -p /home/g0/imagens_continuas
+# Verifica se o fswebcam está instalado e guarda o caminho para a variável
+if ! caminho_fswebcam=$(command -v fswebcam); then
+    echo "Erro: fswebcam não encontrado. Instale com:"
+    echo "sudo apt install fswebcam"
+    exit 1
+fi
+
+# Verifica se a câmera está disponível em /dev/video0
+if [ ! -c /dev/video0 ]; then
+    echo "Erro: câmera não encontrada em /dev/video0."
+    exit 1
+fi
+
+mkdir -p "$HOME/imagens_continuas"
 
 while true; do
     ts=$(date +%Y%m%d_%H%M%S)
-    arquivo="/home/g0/imagens_continuas/foto_${ts}.jpg"
+    arquivo="$HOME/imagens_continuas/foto_${ts}.jpg"
 
     echo "Capturando imagem em $arquivo"
-    /usr/bin/fswebcam -r 1280x720 "$arquivo"
+    if "$caminho_fswebcam" -d /dev/video0 -q -r 1280x720 --no-banner "$arquivo"; then
+	echo "Captura realizada no arquivo $arquivo"
+    else
+	echo "Erro: falha no fswebcam"
+	exit 1
+    fi
+
+    # Salva em um csv o caminho da imagem e a data/hora da captura
+    csv="$HOME/imagens_continuas/capturas.csv"
+
+    # Verifica se o arquivo CSV existe, se não existir, cria e adiciona o cabeçalho
+    # Os cochetes são usados para evitar problemas com espaços em branco no nome do arquivo
+    if [ ! -f "$csv" ]; then
+        echo "caminho,data_hora" > "$csv"
+    fi
+    echo "$arquivo,$(date +%Y-%m-%d_%H:%M:%S)" >> "$csv"
 
     sleep 15
+
 done
+
 ```
 
 Salve e saia do editor.
