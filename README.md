@@ -24,6 +24,8 @@ O repositório está organizado em módulos progressivos. O primeiro módulo apr
 | `002_roteiro_alunos.md` | Roteiro prático do módulo 2 para os alunos. |
 | `002_material_de_apoio/` | Apostila em LaTeX e PDF do módulo 2. |
 | `002_sugestao_slides_systemd.txt` | Texto de apoio/sugestão para elaboração dos slides sobre `systemd`. |
+| `003_roteiro_alunos.md` | Roteiro prático do módulo 3 para os alunos. |
+| `003_material_de_apoio/` | Dataset reduzido, material de apoio e script Python para análise RGB. |
 | `pipeline.odg` | Diagrama do fluxo de trabalho. |
 | `Planejamento.docx` | Documento de planejamento da atividade/disciplina. |
 | `Lista de participantes externos/` | Planilha de participantes externos. |
@@ -71,6 +73,27 @@ Conteúdos abordados:
 - uso de `journalctl` para consultar logs;
 - comparação entre `service + timer` e serviço contínuo;
 - criação de script de coleta contínua com `while true` e `sleep`.
+
+### Módulo 3 - Processamento RGB de imagens
+
+Arquivos principais:
+
+- `003_roteiro_alunos.md`
+- `003_material_de_apoio/apostila.pdf`
+- `003_material_de_apoio/apostila.tex`
+- `003_material_de_apoio/material_de_apoio.md`
+- `003_material_de_apoio/scripts/analise_rgb.py`
+- `003_material_de_apoio/dataset_exemplo/banana`
+- `003_material_de_apoio/dataset_atividade/tomate`
+
+Conteúdos abordados:
+
+- leitura de imagens com Python;
+- cálculo da média dos canais R, G e B;
+- remoção simples de fundo quase branco;
+- geração de arquivo CSV;
+- geração de gráfico RGB;
+- interpretação de imagens como dados experimentais.
 
 ## Como usar os materiais
 
