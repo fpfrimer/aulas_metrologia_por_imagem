@@ -17,6 +17,8 @@ Nos módulos anteriores, vimos como capturar imagens de forma manual e automatiz
 
 O objetivo é gerar um gráfico das componentes RGB ao longo de uma sequência de imagens de uma fruta.
 
+A atividade foi inspirada no trabalho de Valesan sobre controle de maturação por imagem. Esse trabalho está disponível no repositório em `referencias/dispositivocontrolematuracao.pdf`.
+
 ## Parte 1 - Entrar na pasta da atividade
 
 ### O que vamos fazer
@@ -71,7 +73,7 @@ Se o script reclamar da falta das bibliotecas `PIL` ou `matplotlib`, avise o pro
 
 Antes de processar as imagens, vamos conferir a organização dos arquivos.
 
-As imagens vieram de um recorte pequeno do FruitQ, um banco de imagens do Kaggle com várias frutas e classes de qualidade. O banco completo é grande demais para a atividade em laboratório. Por isso, vamos usar apenas 32 imagens de banana no exemplo e 32 imagens de tomate na atividade.
+As imagens vieram de um recorte pequeno do FruitQ, um banco de imagens do Kaggle com várias frutas e classes de qualidade. O banco completo é grande demais para a atividade em laboratório, não está neste repositório e pode ser acessado em: https://www.kaggle.com/datasets/sholzz/fruitq-dataset. Por isso, vamos usar apenas 32 imagens de banana no exemplo e 32 imagens de tomate na atividade.
 
 ### Comandos
 

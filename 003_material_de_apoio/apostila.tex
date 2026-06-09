@@ -14,6 +14,8 @@
 \usepackage[most]{tcolorbox}
 \tcbuselibrary{skins}
 
+\newcounter{quadro}
+
 \newtcolorbox{cmdbox}[1][]{
   colback=blue!5!white,
   colframe=blue!75!black,
@@ -230,7 +232,7 @@ Neste módulo usaremos RGB porque ele é direto, fácil de visualizar e suficien
 
 \subsection{Maturação, imagem e medição}
 
-Esta atividade foi inspirada no trabalho de Valesan (2022), que desenvolveu um dispositivo para controle de maturação de frutas e avaliação da eficiência de biofilmes comestíveis. A ideia central daquele estudo é muito próxima do pipeline discutido nesta disciplina: capturar imagens de forma periódica, armazenar os dados e aplicar processamento digital de imagem para acompanhar mudanças nos frutos.
+Esta atividade foi inspirada no trabalho de Valesan (2022), disponível neste repositório em \path{referencias/dispositivocontrolematuracao.pdf}. Nesse trabalho, foi desenvolvido um dispositivo para controle de maturação de frutas e avaliação da eficiência de biofilmes comestíveis. A ideia central daquele estudo é muito próxima do pipeline discutido nesta disciplina: capturar imagens de forma periódica, armazenar os dados e aplicar processamento digital de imagem para acompanhar mudanças nos frutos.
 
 \subsection{Por que medir a maturação por imagem?}
 
@@ -257,6 +259,14 @@ Processamento digital de imagem, ou PDI, consiste em aplicar operações matemá
 \end{itemize}
 
 Neste módulo, o objetivo de extrair informações numéricas é o mais importante. A imagem não é apenas uma figura para ser observada; ela é uma fonte de dados. Cada pixel possui valores numéricos, e esses valores podem ser organizados em tabelas e gráficos.
+
+\subsection{O papel do Python nesta atividade}
+
+Python é uma linguagem de programação muito usada em ciência, engenharia e análise de dados. Ela permite escrever instruções para o computador executar tarefas automaticamente, como abrir arquivos, fazer cálculos, organizar tabelas e gerar gráficos. No processamento de imagens, Python é bastante utilizado porque possui bibliotecas prontas para ler imagens, acessar pixels e trabalhar com dados numéricos.
+
+Nesta atividade, o Python será usado como ferramenta para automatizar o processamento das imagens. Não é necessário saber programar em Python para realizar a atividade. Os alunos não precisam escrever o programa do zero: já existe um script pronto neste repositório, localizado em \texttt{003\_material\_de\_apoio/scripts/analise\_rgb.py}.
+
+Esse script abre uma sequência de imagens, calcula médias dos canais R, G e B, salva uma tabela CSV e gera um gráfico. A fundamentação teórica apresentada antes da execução serve para que o aluno compreenda o que o script está medindo, quais escolhas experimentais estão envolvidas e por que decisões como a seleção de uma região de interesse afetam os resultados.
 
 \subsection{Região de interesse}
 
@@ -291,11 +301,19 @@ Na atividade deste módulo, usaremos uma versão simplificada dessa ideia: o scr
 \label{fig:ri-banana}
 \end{figure}
 
-A RI pequena indicada na Figura~\ref{fig:ri-banana} se aproxima da estratégia usada no trabalho de Valesan (2022), em que recortes internos eram escolhidos em regiões de cor aproximadamente uniforme. Essa abordagem reduz a influência do fundo e evita partes da fruta com sombra, brilho ou borda, mas mede apenas uma pequena região.
+A RI pequena indicada na Figura~\ref{fig:ri-banana} se aproxima da estratégia usada no trabalho de Valesan (2022), disponível no repositório em \path{referencias/dispositivocontrolematuracao.pdf}, em que recortes internos eram escolhidos em regiões de cor aproximadamente uniforme. Essa abordagem reduz a influência do fundo e evita partes da fruta com sombra, brilho ou borda, mas mede apenas uma pequena região. A Figura~\ref{fig:recortes-ri-banana} mostra os recortes reais dessa RI ao longo das 32 imagens da sequência.
 
-A máscara aproximada da fruta inteira, também mostrada na Figura~\ref{fig:ri-banana}, é mais parecida com a estratégia simplificada usada no script desta aula: em vez de escolher manualmente um quadrado, o programa tenta descartar pixels quase brancos e calcula a média dos demais pixels. Essa abordagem usa mais informação da imagem, mas pode incluir sombras, bordas, manchas e trechos de fundo que não foram removidos perfeitamente.
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{matriz_recortes_ri_banana_v2.png}
+\caption{Recortes reais da RI pequena interna nas 32 imagens de banana. Cada quadro mostra apenas o retângulo selecionado na imagem correspondente, ampliado para visualização.}
+\label{fig:recortes-ri-banana}
+\end{figure}
 
-\begin{cmdbox}[Comparação entre duas escolhas de RI na imagem \texttt{banana\_016.png}]
+A máscara aproximada da fruta inteira, também mostrada na Figura~\ref{fig:ri-banana}, é mais parecida com a estratégia simplificada usada no script desta aula: em vez de escolher manualmente um quadrado, o programa tenta descartar pixels quase brancos e calcula a média dos demais pixels. Essa abordagem usa mais informação da imagem, mas pode incluir sombras, bordas, manchas e trechos de fundo que não foram removidos perfeitamente. O Quadro~\ref{qua:comparacao-ri} resume a diferença numérica entre as duas escolhas para a Figura~\ref{fig:ri-banana}.
+
+\refstepcounter{quadro}\label{qua:comparacao-ri}
+\begin{cmdbox}[Quadro~\thequadro{} -- Comparação entre duas escolhas de RI na Figura~\ref{fig:ri-banana}]
 \begin{tabularx}{\linewidth}{@{}C C C C >{\raggedright\arraybackslash}X@{}}
 \toprule
 \textbf{Região analisada} & \textbf{R} & \textbf{G} & \textbf{B} & \textbf{Comentário} \\
@@ -306,11 +324,12 @@ Máscara aproximada & 179,62 & 126,26 & 35,47 & Usa muito mais pixels da fruta; 
 \end{tabularx}
 \end{cmdbox}
 
-Os valores são diferentes porque as perguntas de medição também são diferentes. A RI pequena responde: ``qual é a cor média desta região específica da banana?''. A máscara aproximada responde: ``qual é a média dos pixels que o algoritmo considerou como não fundo?''. Em uma análise real, a escolha da RI deve ser definida antes do experimento e mantida constante para todas as imagens.
+Os valores apresentados no Quadro~\ref{qua:comparacao-ri} são diferentes porque as perguntas de medição também são diferentes. A RI pequena responde: ``qual é a cor média desta região específica da banana?''. A máscara aproximada responde: ``qual é a média dos pixels que o algoritmo considerou como não fundo?''. Em uma análise real, a escolha da RI deve ser definida antes do experimento e mantida constante para todas as imagens.
 
-O script da atividade usa a máscara aproximada por padrão. Para explorar uma RI retangular fixa, existe a opção \texttt{--roi}. O comando abaixo usa uma RI de largura 80 pixels e altura 25 pixels, começando na posição \texttt{x=500} e \texttt{y=445} da imagem:
+O script da atividade usa a máscara aproximada por padrão. Para explorar uma RI retangular fixa, existe a opção \texttt{--roi}. O Quadro~\ref{qua:comando-roi} usa uma RI de largura 80 pixels e altura 25 pixels, começando na posição \texttt{x=500} e \texttt{y=445} da imagem:
 
-\begin{codebox}
+\refstepcounter{quadro}\label{qua:comando-roi}
+\begin{codebox}[Quadro~\thequadro{} -- Comando para processar uma RI retangular fixa]
 python 003_material_de_apoio/scripts/analise_rgb.py \
 003_material_de_apoio/dataset_exemplo/banana \
 --roi 500 445 80 25 \
@@ -319,7 +338,7 @@ python 003_material_de_apoio/scripts/analise_rgb.py \
 
 Essa RI fixa é útil para discutir o método, mas deve ser usada com cuidado: se a fruta mudar de posição, o retângulo pode deixar de apontar para a mesma região física da fruta.
 
-A Figura~\ref{fig:comparacao-ri-mascara} compara os gráficos produzidos pelas duas estratégias ao longo das 32 imagens de banana. A máscara aproximada da fruta inteira tende a produzir curvas mais suaves do que a RI pequena, pois usa muitos pixels da fruta. Mesmo assim, quando o fundo é removido de forma mais adequada, as curvas passam a variar mais do que variavam com o limiar antigo. A RI pequena é mais sensível ao ponto escolhido: ela pode destacar melhor uma região local da polpa, mas também pode variar bastante se a fruta mudar de posição, se a mancha passar pela região escolhida ou se o retângulo pegar sombra.
+A Figura~\ref{fig:comparacao-ri-mascara} compara os gráficos produzidos pelas duas estratégias ao longo das 32 imagens de banana. A máscara aproximada da fruta inteira tende a produzir curvas mais suaves do que a RI pequena, pois usa muitos pixels da fruta. Mesmo assim, quando o fundo é removido de forma mais adequada, as curvas passam a refletir melhor as mudanças visuais da banana. A RI pequena é mais sensível ao ponto escolhido: ela pode destacar melhor uma região local da polpa, mas também pode variar bastante se a fruta mudar de posição, se a mancha passar pela região escolhida ou se o retângulo pegar sombra.
 
 \begin{figure}[H]
 \centering
@@ -338,35 +357,36 @@ A Figura~\ref{fig:comparacao-ri-mascara} compara os gráficos produzidos pelas d
 \label{fig:comparacao-ri-mascara}
 \end{figure}
 
-\section{Controle experimental e fontes de erro}
+\subsection{Por que ignorar o fundo branco?}
 
-Em um experimento real, não basta escolher um algoritmo. A forma de captura influencia diretamente os resultados. No estudo usado como referência, as imagens eram adquiridas periodicamente em uma câmara com ambiente controlado, junto com outras grandezas, como temperatura, umidade, luminosidade, dióxido de carbono e massa dos frutos.
+Muitas imagens usadas na atividade possuem fundo quase branco. Se a média RGB for calculada usando todos os pixels da imagem, o resultado pode representar mais o fundo do que a fruta. Isso é um problema experimental importante: nem todo pixel da imagem pertence ao objeto de interesse.
 
-Esse cuidado é importante porque a cor medida pela câmera pode mudar por motivos que não estão relacionados à maturação:
-
-\begin{itemize}
-  \item variação da iluminação;
-  \item sombras;
-  \item mudança de posição da câmera;
-  \item mudança de posição da fruta;
-  \item ajuste automático da câmera;
-  \item reflexos e brilho na superfície.
-\end{itemize}
-
-Por isso, técnicas como uso de fundo de referência, normalização, escolha de regiões de interesse e média móvel podem ser usadas para reduzir variações indesejadas. Nesta aula, aplicaremos apenas uma primeira aproximação: remover pixels de fundo quase branco e observar as médias RGB.
-
-\subsection{Relação com a atividade prática}
-
-O trabalho de referência acompanhava frutos ao longo do tempo real, com imagens capturadas periodicamente. No nosso caso, usaremos um subconjunto didático de imagens retiradas do FruitQ. A sequência foi organizada para representar uma progressão visual de qualidade, e não uma coleta temporal real.
-
-Mesmo assim, o raciocínio experimental é o mesmo:
+Para reduzir esse efeito, o script ignora pixels quase brancos. A regra usada é simples:
 
 \begin{codebox}
-imagem -> região analisada -> valores RGB
-       -> tabela -> gráfico -> interpretação
+R >= 220, G >= 220 e B >= 220
 \end{codebox}
 
-A atividade é, portanto, uma versão reduzida do processo usado em estudos de maturação por imagem. O objetivo é entender a lógica da medição antes de avançar para técnicas mais complexas.
+Quando isso ocorre, o pixel é considerado fundo e não entra no cálculo da média.
+
+Essa técnica é uma forma simples de limiarização, também chamada de \textit{thresholding}. A limiarização é uma técnica clássica de segmentação em processamento de imagens: uma regra separa pixels em classes, por exemplo ``fundo'' e ``objeto'', usando um ou mais valores de corte. Um método muito conhecido para escolher limiares automaticamente é o método de Otsu, que busca separar classes a partir do histograma de intensidades (OTSU, 1979). Livros de processamento de imagens, como Gonzalez e Woods (2018), também tratam a limiarização como uma técnica básica de segmentação.
+
+A Figura~\ref{fig:pixels-desconsiderados} mostra o efeito da regra usada no script sobre a imagem \texttt{banana\_016.png}. Os pixels pretos são aqueles que foram descartados por serem considerados fundo quase branco. Os demais pixels foram mantidos no cálculo.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.9\linewidth]{banana_016_pixels_desconsiderados.png}
+\caption{Imagem de diagnóstico: pixels em preto foram desconsiderados pela regra \texttt{R >= 220, G >= 220 e B >= 220}; os demais pixels foram mantidos no cálculo.}
+\label{fig:pixels-desconsiderados}
+\end{figure}
+
+Na Figura~\ref{fig:pixels-desconsiderados}, quase todo o fundo branco fica preto. Isso indica que a maior parte do fundo foi descartada antes do cálculo da média. Na imagem analisada, o limiar 220 descartou cerca de 83\% dos pixels. Se fosse usado um limiar mais alto, como 245, apenas cerca de 12\% dos pixels seriam removidos; muitos pixels de fundo ainda entrariam na média. Esse fundo residual puxaria os valores RGB para perto do branco e faria as curvas variarem pouco, escondendo parte das mudanças visuais da banana.
+
+Escolher o limiar é uma decisão experimental. Um limiar alto, como 245, só remove pixels muito brancos. Um limiar mais baixo, como 220, remove uma parte maior do fundo, mas pode começar a remover regiões claras do objeto, dependendo da cor da fruta e da iluminação. Por isso, o limiar deve ser escolhido observando imagens de teste, avaliando a imagem segmentada e mantendo a mesma regra para todas as imagens que serão comparadas.
+
+O script para análise de imagens presente neste material permite testar outros valores com a opção \texttt{--limite-branco}. A Seção~\ref{subsec:teste-limiar} apresenta um comando específico para repetir o processamento usando outro limiar.
+
+Essa técnica não é perfeita. Ela pode falhar se o fundo não for branco, se a fruta possuir regiões muito claras ou se houver sombras fortes. Mesmo assim, é suficiente para mostrar uma ideia central: antes de medir, é necessário decidir qual região da imagem representa o objeto de interesse.
 
 \section{Dataset usado na atividade}
 
@@ -381,7 +401,7 @@ Neste material, foram usadas duas frutas:
   \item tomate, usado na atividade dos alunos.
 \end{itemize}
 
-Cada conjunto possui 32 imagens. O dataset completo permanece na pasta \texttt{FruQ-multi}, mas essa pasta não precisa ser usada pelos alunos. Para a aula, os arquivos foram copiados para \texttt{003\_material\_de\_apoio} e renomeados com um padrão simples:
+Cada conjunto possui 32 imagens. O dataset completo não foi mantido neste repositório, pois é grande para a atividade. Ele pode ser acessado diretamente no Kaggle em \url{https://www.kaggle.com/datasets/sholzz/fruitq-dataset}. Para a aula, os arquivos foram copiados para \texttt{003\_material\_de\_apoio} e renomeados com um padrão simples:
 
 \begin{codebox}
 banana_001.png
@@ -403,9 +423,10 @@ Esse tipo de nomenclatura é parecido com o que se espera em uma coleta real aut
 
 \subsection{Ordem das imagens}
 
-As imagens foram selecionadas respeitando a ordem numérica original do dataset e espaçadas de forma uniforme dentro de cada etapa. No conjunto didático, a sequência foi organizada assim:
+As imagens foram selecionadas respeitando a ordem numérica original do dataset e espaçadas de forma uniforme dentro de cada etapa. No conjunto didático, a sequência foi organizada conforme o Quadro~\ref{qua:etapas-sequencia}:
 
-\begin{cmdbox}[Etapas da sequência]
+\refstepcounter{quadro}\label{qua:etapas-sequencia}
+\begin{cmdbox}[Quadro~\thequadro{} -- Etapas da sequência]
 \begin{tabularx}{\linewidth}{@{}C C >{\raggedright\arraybackslash}X@{}}
 \toprule
 \textbf{Índices} & \textbf{Etapa} & \textbf{Interpretação} \\
@@ -419,43 +440,35 @@ As imagens foram selecionadas respeitando a ordem numérica original do dataset 
 
 A sequência não deve ser tratada como uma medição temporal real de laboratório. Ela representa uma ordem visual de alteração, útil para praticar processamento de imagem.
 
-\section{Por que ignorar o fundo branco?}
+\section{Controle experimental e fontes de erro}
 
-Muitas imagens do dataset possuem fundo quase branco. Se a média RGB for calculada usando todos os pixels da imagem, o resultado pode representar mais o fundo do que a fruta. Isso é um problema experimental importante: nem todo pixel da imagem pertence ao objeto de interesse.
+Em um experimento real, não basta escolher um algoritmo. A forma de captura influencia diretamente os resultados. No estudo usado como referência, as imagens eram adquiridas periodicamente em uma câmara com ambiente controlado, junto com outras grandezas, como temperatura, umidade, luminosidade, dióxido de carbono e massa dos frutos. O trabalho de Valesan está disponível neste repositório em \path{referencias/dispositivocontrolematuracao.pdf}.
 
-Para reduzir esse efeito, o script ignora pixels quase brancos. A regra usada é simples:
+Esse cuidado é importante porque a cor medida pela câmera pode mudar por motivos que não estão relacionados à maturação:
 
-\begin{codebox}
-R >= 220, G >= 220 e B >= 220
-\end{codebox}
+\begin{itemize}
+  \item variação da iluminação;
+  \item sombras;
+  \item mudança de posição da câmera;
+  \item mudança de posição da fruta;
+  \item ajuste automático da câmera;
+  \item reflexos e brilho na superfície.
+\end{itemize}
 
-Quando isso ocorre, o pixel é considerado fundo e não entra no cálculo da média.
+Por isso, técnicas como uso de fundo de referência, normalização, escolha de regiões de interesse e média móvel podem ser usadas para reduzir variações indesejadas. Nesta aula, aplicaremos apenas uma primeira aproximação: remover pixels de fundo quase branco e observar as médias RGB.
 
-Essa técnica é uma forma simples de limiarização, também chamada de \textit{thresholding}. A limiarização é uma técnica clássica de segmentação em processamento de imagens: uma regra separa pixels em classes, por exemplo ``fundo'' e ``objeto'', usando um ou mais valores de corte. Um método muito conhecido para escolher limiares automaticamente é o método de Otsu, que busca separar classes a partir do histograma de intensidades (OTSU, 1979). Livros de processamento de imagens, como Gonzalez e Woods (2018), também tratam a limiarização como uma técnica básica de segmentação.
+\subsection{Relação com a atividade prática}
 
-A Figura~\ref{fig:pixels-desconsiderados} mostra o efeito da regra usada no script sobre a imagem \texttt{banana\_016.png}. Os pixels pretos são aqueles que foram descartados por serem considerados fundo quase branco. Os demais pixels foram mantidos no cálculo.
+O trabalho de referência acompanhava frutos ao longo do tempo real, com imagens capturadas periodicamente. No nosso caso, usaremos o subconjunto didático do FruitQ apresentado na seção anterior. A sequência foi organizada para representar uma progressão visual de qualidade, e não uma coleta temporal real.
 
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.9\linewidth]{banana_016_pixels_desconsiderados.png}
-\caption{Imagem de diagnóstico: pixels em preto foram desconsiderados pela regra \texttt{R >= 220, G >= 220 e B >= 220}; os demais pixels foram mantidos no cálculo.}
-\label{fig:pixels-desconsiderados}
-\end{figure}
-
-Na Figura~\ref{fig:pixels-desconsiderados}, quase todo o fundo branco fica preto. Isso indica que a maior parte do fundo foi descartada antes do cálculo da média. Na imagem analisada, o limiar 220 descartou cerca de 83\% dos pixels. Com o limiar anterior, 245, apenas cerca de 12\% dos pixels eram removidos; muitos pixels de fundo ainda entravam na média. Esse fundo residual puxava os valores RGB para perto do branco e fazia as curvas variarem pouco, escondendo parte das mudanças visuais da banana.
-
-Escolher o limiar é uma decisão experimental. Um limiar alto, como 245, só remove pixels muito brancos. Um limiar mais baixo, como 220, remove uma parte maior do fundo, mas pode começar a remover regiões claras do objeto, dependendo da cor da fruta e da iluminação. Por isso, o limiar deve ser escolhido observando imagens de teste, avaliando a imagem segmentada e mantendo a mesma regra para todas as imagens que serão comparadas.
-
-O script permite testar outros valores com a opção \texttt{--limite-branco}. Por exemplo:
+Mesmo assim, o raciocínio experimental é o mesmo:
 
 \begin{codebox}
-python 003_material_de_apoio/scripts/analise_rgb.py \
-003_material_de_apoio/dataset_exemplo/banana \
---limite-branco 245 \
---csv banana_limiar245.csv --grafico banana_limiar245.png
+imagem -> região analisada -> valores RGB
+       -> tabela -> gráfico -> interpretação
 \end{codebox}
 
-Essa técnica não é perfeita. Ela pode falhar se o fundo não for branco, se a fruta possuir regiões muito claras ou se houver sombras fortes. Mesmo assim, é suficiente para mostrar uma ideia central: antes de medir, é necessário decidir qual região da imagem representa o objeto de interesse.
+A atividade é, portanto, uma versão reduzida do processo usado em estudos de maturação por imagem. O objetivo é entender a lógica da medição antes de avançar para técnicas mais complexas.
 
 \section{Execução do script}
 
@@ -473,23 +486,26 @@ As bibliotecas necessárias estão listadas em:
 003_material_de_apoio/requirements.txt
 \end{codebox}
 
-No computador Windows do laboratório, se for necessário instalar as bibliotecas, abra o PowerShell na pasta do material e use:
+No computador Windows do laboratório, se for necessário instalar as bibliotecas, abra o PowerShell na pasta do material e use o comando do Quadro~\ref{qua:comando-instalar-bibliotecas}:
 
-\begin{codebox}
+\refstepcounter{quadro}\label{qua:comando-instalar-bibliotecas}
+\begin{codebox}[Quadro~\thequadro{} -- Comando para instalar as bibliotecas]
 python -m pip install -r 003_material_de_apoio/requirements.txt
 \end{codebox}
 
-Antes de executar o script, também é possível conferir se o Python está disponível:
+Antes de executar o script, também é possível conferir se o Python está disponível com o comando do Quadro~\ref{qua:comando-versao-python}:
 
-\begin{codebox}
+\refstepcounter{quadro}\label{qua:comando-versao-python}
+\begin{codebox}[Quadro~\thequadro{} -- Comando para verificar a versão do Python]
 python --version
 \end{codebox}
 
 \subsection{Exemplo com banana}
 
-Para processar o conjunto de banana, execute:
+Para processar o conjunto de banana, execute o comando do Quadro~\ref{qua:comando-banana}:
 
-\begin{codebox}
+\refstepcounter{quadro}\label{qua:comando-banana}
+\begin{codebox}[Quadro~\thequadro{} -- Comando para processar o exemplo com banana]
 python 003_material_de_apoio/scripts/analise_rgb.py \
 003_material_de_apoio/dataset_exemplo/banana
 \end{codebox}
@@ -503,11 +519,25 @@ grafico_rgb.png
 
 O CSV é uma tabela com uma linha por imagem. O gráfico mostra como os canais R, G e B variam ao longo da sequência.
 
+\subsection{Teste com outro limiar de fundo}
+\label{subsec:teste-limiar}
+
+Depois de processar o exemplo com o valor padrão, é possível repetir a análise mudando o limiar de fundo. O comando do Quadro~\ref{qua:comando-limiar} usa o valor 245 para comparar o resultado com o processamento padrão:
+
+\refstepcounter{quadro}\label{qua:comando-limiar}
+\begin{codebox}[Quadro~\thequadro{} -- Comando para testar outro limiar de fundo]
+python 003_material_de_apoio/scripts/analise_rgb.py \
+003_material_de_apoio/dataset_exemplo/banana \
+--limite-branco 245 \
+--csv banana_limiar245.csv --grafico banana_limiar245.png
+\end{codebox}
+
 \subsection{Atividade com tomate}
 
-Depois do exemplo, os alunos devem repetir o processamento com o conjunto de tomate:
+Depois do exemplo, os alunos devem repetir o processamento com o conjunto de tomate usando o comando do Quadro~\ref{qua:comando-tomate}:
 
-\begin{codebox}
+\refstepcounter{quadro}\label{qua:comando-tomate}
+\begin{codebox}[Quadro~\thequadro{} -- Comando para processar a atividade com tomate]
 python 003_material_de_apoio/scripts/analise_rgb.py \
 003_material_de_apoio/dataset_atividade/tomate \
 --csv tomate_rgb.csv --grafico tomate_rgb.png
@@ -742,9 +772,10 @@ pixels\_usados & Quantidade de pixels considerados após remover o fundo quase b
 \end{tabularx}
 \end{cmdbox}
 
-Para visualizar as primeiras linhas da tabela no terminal, use:
+Para visualizar as primeiras linhas da tabela no terminal, use o comando do Quadro~\ref{qua:comando-ver-csv}:
 
-\begin{codebox}
+\refstepcounter{quadro}\label{qua:comando-ver-csv}
+\begin{codebox}[Quadro~\thequadro{} -- Comando para visualizar as primeiras linhas do CSV]
 Get-Content resultado_rgb.csv -TotalCount 10
 \end{codebox}
 
@@ -816,6 +847,6 @@ OTSU, Nobuyuki. A threshold selection method from gray-level histograms. \textit
 
 SHOLZZ. \textit{FruitQ Dataset}. Kaggle. Disponível em: \url{https://www.kaggle.com/datasets/sholzz/fruitq-dataset}.
 
-VALESAN, Dyorgyo Pompermaier. \textit{Dispositivo para controle de maturação de frutas e controle de eficiência de biofilmes comestíveis}. Trabalho de Conclusão de Curso (Bacharelado em Engenharia Eletrônica) -- Universidade Tecnológica Federal do Paraná, Toledo, 2022.
+VALESAN, Dyorgyo Pompermaier. \textit{Dispositivo para controle de maturação de frutas e controle de eficiência de biofilmes comestíveis}. Trabalho de Conclusão de Curso (Bacharelado em Engenharia Eletrônica) -- Universidade Tecnológica Federal do Paraná, Toledo, 2022. Arquivo disponível neste repositório em \path{referencias/dispositivocontrolematuracao.pdf}.
 
 \end{document}

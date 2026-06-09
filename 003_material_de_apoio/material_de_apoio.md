@@ -12,7 +12,7 @@ O procedimento será:
 3. salvar os resultados em uma tabela;
 4. gerar um gráfico RGB ao longo da sequência.
 
-As imagens foram retiradas de um subconjunto didático do FruitQ, um dataset público do Kaggle voltado ao estudo de qualidade visual de frutas e hortaliças. O banco completo é muito maior e possui várias frutas, como banana, pepino, uva, caqui, mamão, pêssego, pera, pimentão, morango, tomate e melancia, organizadas em classes visuais de qualidade.
+As imagens foram retiradas de um subconjunto didático do FruitQ, um dataset público do Kaggle voltado ao estudo de qualidade visual de frutas e hortaliças. O banco completo é muito maior e possui várias frutas, como banana, pepino, uva, caqui, mamão, pêssego, pera, pimentão, morango, tomate e melancia, organizadas em classes visuais de qualidade. O dataset completo pode ser acessado em: https://www.kaggle.com/datasets/sholzz/fruitq-dataset.
 
 Nesta aula usamos apenas uma pequena amostra: banana para o exemplo e tomate para a atividade. A sequência não representa uma medição temporal real feita no laboratório. Ela foi organizada por etapa visual de qualidade: fruta boa, intermediária e deteriorada. Por isso, o eixo horizontal do gráfico deve ser interpretado como índice da imagem ou ordem da sequência.
 
