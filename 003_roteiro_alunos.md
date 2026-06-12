@@ -73,7 +73,7 @@ Se o script reclamar da falta das bibliotecas `PIL` ou `matplotlib`, avise o pro
 
 Antes de processar as imagens, vamos conferir a organização dos arquivos.
 
-As imagens vieram de um recorte pequeno do FruitQ, um banco de imagens do Kaggle com várias frutas e classes de qualidade. O banco completo é grande demais para a atividade em laboratório, não está neste repositório e pode ser acessado em: https://www.kaggle.com/datasets/sholzz/fruitq-dataset. Por isso, vamos usar apenas 32 imagens de banana no exemplo e 32 imagens de tomate na atividade.
+As imagens vieram de um recorte pequeno do FruitQ, um banco de imagens do Kaggle com várias frutas e classes de qualidade. O banco completo é grande demais para a atividade em laboratório, não está neste repositório e pode ser acessado em: https://www.kaggle.com/datasets/sholzz/fruitq-dataset. Por isso, vamos usar apenas 32 imagens de banana no exemplo e 32 imagens de morango na atividade.
 
 ### Comandos
 
@@ -180,12 +180,12 @@ Abra o arquivo `grafico_rgb.png` no computador do laboratório, clicando duas ve
 
 ### O que vamos fazer
 
-Agora cada grupo vai repetir o procedimento com o conjunto de tomate.
+Agora cada grupo vai repetir o procedimento com o conjunto de morango.
 
 ### Comando
 
 ```powershell
-python 003_material_de_apoio/scripts/analise_rgb.py 003_material_de_apoio/dataset_atividade/tomate --csv tomate_rgb.csv --grafico tomate_rgb.png
+python 003_material_de_apoio/scripts/analise_rgb.py 003_material_de_apoio/dataset_atividade/morango --csv morango_rgb.csv --grafico morango_rgb.png
 ```
 
 ### Confira
@@ -194,10 +194,10 @@ python 003_material_de_apoio/scripts/analise_rgb.py 003_material_de_apoio/datase
 dir
 ```
 
-- [ ] O arquivo `tomate_rgb.csv` foi criado.
-- [ ] O arquivo `tomate_rgb.png` foi criado.
+- [ ] O arquivo `morango_rgb.csv` foi criado.
+- [ ] O arquivo `morango_rgb.png` foi criado.
 
-## Parte 7 - Comparar banana e tomate
+## Parte 7 - Comparar banana e morango
 
 ### O que vamos fazer
 
@@ -206,7 +206,7 @@ Compare os resultados do exemplo com os resultados da atividade.
 ### Perguntas
 
 1. A fruta analisada pelo grupo teve comportamento parecido com a banana?
-2. Qual canal RGB foi mais importante no tomate?
+2. Qual canal RGB foi mais importante no morango?
 3. O fundo branco atrapalharia a análise?
 4. Como a iluminação poderia alterar o gráfico?
 5. Que melhoria você faria no processamento?
@@ -220,7 +220,7 @@ Por padrão, o script ignora pixels quase brancos para reduzir o efeito do fundo
 ### Comando
 
 ```powershell
-python 003_material_de_apoio/scripts/analise_rgb.py 003_material_de_apoio/dataset_atividade/tomate --imagem-inteira --csv tomate_inteiro.csv --grafico tomate_inteiro.png
+python 003_material_de_apoio/scripts/analise_rgb.py 003_material_de_apoio/dataset_atividade/morango --imagem-inteira --csv morango_inteiro.csv --grafico morango_inteiro.png
 ```
 
 ### Perguntas
@@ -238,7 +238,7 @@ O script descarta pixels quase brancos usando um limiar. Por padrão, o valor é
 ### Comando
 
 ```powershell
-python 003_material_de_apoio/scripts/analise_rgb.py 003_material_de_apoio/dataset_atividade/tomate --limite-branco 245 --csv tomate_limiar245.csv --grafico tomate_limiar245.png
+python 003_material_de_apoio/scripts/analise_rgb.py 003_material_de_apoio/dataset_atividade/morango --limite-branco 245 --csv morango_limiar245.csv --grafico morango_limiar245.png
 ```
 
 ### Perguntas
@@ -259,7 +259,7 @@ Ao final, cada grupo deve apresentar:
 ## Revisão final
 
 - [ ] Processei as imagens de banana.
-- [ ] Processei as imagens de tomate.
+- [ ] Processei as imagens de morango.
 - [ ] Gerei CSV e gráfico.
 - [ ] Comparei os resultados.
 - [ ] Entendi que processamento de imagem depende da captura, iluminação, fundo e escolha da região analisada.

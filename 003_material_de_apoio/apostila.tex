@@ -398,7 +398,7 @@ Neste material, foram usadas duas frutas:
 
 \begin{itemize}
   \item banana, usada no exemplo guiado;
-  \item tomate, usado na atividade dos alunos.
+  \item morango, usado na atividade dos alunos.
 \end{itemize}
 
 Cada conjunto possui 32 imagens. O dataset completo não foi mantido neste repositório, pois é grande para a atividade. Ele pode ser acessado diretamente no Kaggle em \url{https://www.kaggle.com/datasets/sholzz/fruitq-dataset}. Para a aula, os arquivos foram copiados para \texttt{003\_material\_de\_apoio} e renomeados com um padrão simples:
@@ -413,10 +413,10 @@ banana_032.png
 e
 
 \begin{codebox}
-tomate_001.png
-tomate_002.png
+morango_001.png
+morango_002.png
 ...
-tomate_032.png
+morango_032.png
 \end{codebox}
 
 Esse tipo de nomenclatura é parecido com o que se espera em uma coleta real automatizada: todos os arquivos seguem o mesmo formato, mudando apenas o número da imagem.
@@ -532,15 +532,15 @@ python 003_material_de_apoio/scripts/analise_rgb.py \
 --csv banana_limiar245.csv --grafico banana_limiar245.png
 \end{codebox}
 
-\subsection{Atividade com tomate}
+\subsection{Atividade com morango}
 
-Depois do exemplo, os alunos devem repetir o processamento com o conjunto de tomate usando o comando do Quadro~\ref{qua:comando-tomate}:
+Depois do exemplo, os alunos devem repetir o processamento com o conjunto de morango usando o comando do Quadro~\ref{qua:comando-morango}:
 
-\refstepcounter{quadro}\label{qua:comando-tomate}
-\begin{codebox}[Quadro~\thequadro{} -- Comando para processar a atividade com tomate]
+\refstepcounter{quadro}\label{qua:comando-morango}
+\begin{codebox}[Quadro~\thequadro{} -- Comando para processar a atividade com morango]
 python 003_material_de_apoio/scripts/analise_rgb.py \
-003_material_de_apoio/dataset_atividade/tomate \
---csv tomate_rgb.csv --grafico tomate_rgb.png
+003_material_de_apoio/dataset_atividade/morango \
+--csv morango_rgb.csv --grafico morango_rgb.png
 \end{codebox}
 
 O uso de \texttt{--csv} e \texttt{--grafico} permite escolher os nomes dos arquivos de saída.
@@ -590,7 +590,7 @@ def listar_imagens(pasta):
     return sorted(imagens)
 \end{codebox}
 
-O conjunto \texttt{extensoes} define quais formatos serão aceitos. O comando \texttt{iterdir()} percorre os arquivos da pasta. O \texttt{sorted} coloca os nomes em ordem. Como os arquivos foram padronizados como \texttt{banana\_001.png}, \texttt{banana\_002.png} e assim por diante, essa ordenação fica coerente com a sequência da atividade.
+O conjunto \texttt{extensoes} define quais formatos serão aceitos. O comando \texttt{iterdir()} percorre os arquivos da pasta. O \texttt{sorted} coloca os nomes em ordem. Como os arquivos foram padronizados como \texttt{banana\_001.png}, \texttt{banana\_002.png}, \texttt{morango\_001.png}, \texttt{morango\_002.png} e assim por diante, essa ordenação fica coerente com a sequência da atividade.
 
 \subsection{Identificação da etapa}
 

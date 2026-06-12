@@ -14,7 +14,7 @@ O procedimento será:
 
 As imagens foram retiradas de um subconjunto didático do FruitQ, um dataset público do Kaggle voltado ao estudo de qualidade visual de frutas e hortaliças. O banco completo é muito maior e possui várias frutas, como banana, pepino, uva, caqui, mamão, pêssego, pera, pimentão, morango, tomate e melancia, organizadas em classes visuais de qualidade. O dataset completo pode ser acessado em: https://www.kaggle.com/datasets/sholzz/fruitq-dataset.
 
-Nesta aula usamos apenas uma pequena amostra: banana para o exemplo e tomate para a atividade. A sequência não representa uma medição temporal real feita no laboratório. Ela foi organizada por etapa visual de qualidade: fruta boa, intermediária e deteriorada. Por isso, o eixo horizontal do gráfico deve ser interpretado como índice da imagem ou ordem da sequência.
+Nesta aula usamos apenas uma pequena amostra: banana para o exemplo e morango para a atividade. A sequência não representa uma medição temporal real feita no laboratório. Ela foi organizada por etapa visual de qualidade: fruta boa, intermediária e deteriorada. Por isso, o eixo horizontal do gráfico deve ser interpretado como índice da imagem ou ordem da sequência.
 
 ## Organização dos dados
 
@@ -28,13 +28,13 @@ O material possui dois conjuntos pequenos:
       ...
       banana_032.png
   dataset_atividade/
-    tomate/
-      tomate_001.png
+    morango/
+      morango_001.png
       ...
-      tomate_032.png
+      morango_032.png
 ```
 
-O professor usa o conjunto de banana para demonstrar o processamento. Depois, os alunos repetem o procedimento com o conjunto de tomate.
+O professor usa o conjunto de banana para demonstrar o processamento. Depois, os alunos repetem o procedimento com o conjunto de morango.
 
 As imagens foram amostradas de forma uniforme a partir da ordem numérica original do dataset. O nome dos arquivos foi padronizado para facilitar o processamento, como ocorreria em uma coleta real automatizada:
 
